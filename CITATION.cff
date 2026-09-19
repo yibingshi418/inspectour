@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use Inspectour in your research, please cite it as below."
+title: "Inspectour: interactive inspection of f0 contours through grouping and comparison"
+abstract: >-
+  A Shiny application for exploring normalised f0 trajectories without assuming
+  categories in advance. Contours can be grouped, coloured, faceted, isolated
+  and labelled interactively, supporting prosodic categorisation in fieldwork on
+  under-described systems.
+type: software
+authors:
+  - given-names: Yibing
+    family-names: Shi
+    email: yibingshi2@gmail.com
+version: "0.1.0"
+date-released: "2026-09-19"
+license: MIT
+keywords:
+  - phonetics
+  - prosody
+  - tone
+  - f0
+  - data visualisation
+  - R
+  - Shiny
