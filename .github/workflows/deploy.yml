@@ -38,7 +38,7 @@ jobs:
         if: steps.creds.outputs.ok == 'true'
         with:
           packages: >-
-            shiny, ggplot2, plotly, dplyr, tidyr, readr, DT, scales, rsconnect
+            shiny, ggplot2, plotly, dplyr, tidyr, readr, DT, scales, rsconnect, cpp11
 
       - name: Deploy to shinyapps.io
         if: steps.creds.outputs.ok == 'true'
