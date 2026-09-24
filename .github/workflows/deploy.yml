@@ -1,0 +1,58 @@
+name: deploy
+
+# Publishes the app to shinyapps.io. Needs three repository secrets:
+#   SHINYAPPS_ACCOUNT, SHINYAPPS_TOKEN, SHINYAPPS_SECRET
+# Without them the job is skipped, so forks are unaffected.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SHINYAPPS_ACCOUNT: ${{ secrets.SHINYAPPS_ACCOUNT }}
+      SHINYAPPS_TOKEN: ${{ secrets.SHINYAPPS_TOKEN }}
+      SHINYAPPS_SECRET: ${{ secrets.SHINYAPPS_SECRET }}
+    steps:
+      - name: Check credentials
+        id: creds
+        run: |
+          if [ -n "$SHINYAPPS_ACCOUNT" ] && [ -n "$SHINYAPPS_TOKEN" ] && [ -n "$SHINYAPPS_SECRET" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No shinyapps.io secrets set; skipping deploy."
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.creds.outputs.ok == 'true'
+
+      - uses: r-lib/actions/setup-r@v2
+        if: steps.creds.outputs.ok == 'true'
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        if: steps.creds.outputs.ok == 'true'
+        with:
+          packages: >-
+            shiny, ggplot2, plotly, dplyr, tidyr, readr, DT, scales, rsconnect
+
+      - name: Deploy to shinyapps.io
+        if: steps.creds.outputs.ok == 'true'
+        run: |
+          rsconnect::setAccountInfo(name   = Sys.getenv("SHINYAPPS_ACCOUNT"),
+                                    token  = Sys.getenv("SHINYAPPS_TOKEN"),
+                                    secret = Sys.getenv("SHINYAPPS_SECRET"))
+          files <- c("app.R",
+                     list.files("R", full.names = TRUE),
+                     "data/sample_data.csv.gz",
+                     list.files("data/sample_audio", full.names = TRUE))
+          rsconnect::deployApp(appDir = ".", appFiles = files,
+                               appName = "inspectour",
+                               account = Sys.getenv("SHINYAPPS_ACCOUNT"),
+                               server = "shinyapps.io",
+                               forceUpdate = TRUE, launch.browser = FALSE)
+        shell: Rscript {0}

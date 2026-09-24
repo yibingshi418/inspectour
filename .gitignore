@@ -24,3 +24,8 @@ rsconnect/
 # scratch
 *.log
 output/
+
+# local backups and drafts
+*.bak
+*.pre_*
+_backup/

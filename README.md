@@ -30,10 +30,11 @@ install.packages(c("shiny", "ggplot2", "plotly", "dplyr",
 shiny::runApp(".")
 ```
 
-Then press **Try the sample data** on the landing page. That loads
-`data/sample_contours.csv` — 85 disyllabic tone-sandhi contours from 8
-speakers — so you can exercise every part of the tool without preparing
-anything. See [`data/README.md`](data/README.md) for the columns.
+Then open the **Data** page and press **Try it with sample data**. That loads
+`data/sample_data.csv.gz`: 85 disyllabic tone-sandhi contours from 8 speakers.
+Press **Try it with sample audio** as well to load a short excerpt of one
+speaker's recording with its Praat TextGrid, so you can click a contour and
+hear it. See [`data/README.md`](data/README.md) for the columns.
 
 ## What you can do
 
@@ -44,6 +45,7 @@ anything. See [`data/README.md`](data/README.md) for the columns.
 | **Mark structure** | Draw a boundary line wherever a column changes within a token (syllable, word, phrase), or disconnect the contour there entirely. |
 | **Switch scale** | Move between individual tokens, group means with ±1 SD ribbons, or means drawn over the tokens they summarise. |
 | **Single out tokens** | Click a line to select it, or search by token id. Selection and search stay in sync. |
+| **Listen** | Click a contour to hear it. Clips are cut on the fly from long recordings, located through Praat TextGrids, so you don't need one file per token. |
 | **Record decisions** | Label the current selection, build up a curation log, undo, and export the whole dataset with your labels attached as a new column. |
 
 <p align="center">
@@ -62,8 +64,32 @@ Inspectour expects **long format** — one row per time point per token:
 | speaker | speaker identifier |
 | anything else | any number of grouping variables — tone category, syntactic structure, elicitation condition, and so on |
 
-Column roles are guessed on load and can be reassigned in the sidebar, so your
-column names do not have to match anything. `.csv` and `.rds` are both accepted.
+Column roles are guessed on load and can be reassigned on the Data page, so
+your column names don't have to match anything. If no single column identifies
+a token, you can combine several (for example speaker + item + condition).
+
+### Audio (optional)
+
+Recordings can be supplied as one WAV file per token, named by its token id, or
+as long recordings with a Praat TextGrid. In the TextGrid case you say which
+part of each interval label (and of the file name) holds each identifying
+column, and the app matches intervals to tokens, including tokens that span
+several intervals, such as one per syllable. Only uncompressed PCM WAV is
+supported.
+
+## Code layout
+
+`app.R` is intentionally thin. Shiny sources every file in `R/` before running
+the app:
+
+| file | contents |
+|---|---|
+| `R/helpers.R` | constants and small helpers shared by the UI and server |
+| `R/textgrid.R` | Praat TextGrid reader (short and long text formats) |
+| `R/wavclip.R` | cuts one interval out of a WAV file without reading the whole file |
+| `R/audio_match.R` | matches TextGrid intervals to dataset tokens |
+| `R/ui.R` | the page layout |
+| `R/server.R` | all reactive logic |
 
 ## Tests
 
@@ -71,10 +97,11 @@ column names do not have to match anything. `.csv` and `.rds` are both accepted.
 Rscript tests/test_app.R
 ```
 
-Drives the server with `shiny::testServer` and covers data loading, column
-auto-detection, axis rescaling, every plotting path (tokens, means,
-means-over-tokens, single and grid faceting, boundary and disconnect modes),
-filtering, and the full labelling and undo cycle.
+Checks the audio pipeline on the bundled recording (TextGrid reading, token
+grouping, matching to the dataset, clip extraction), then drives the server with
+`shiny::testServer`: data loading, column auto-detection, every plotting path
+(tokens, means, means over tokens, single and grid faceting, boundary and
+disconnect modes) and loading the sample audio.
 
 ## Citing
 

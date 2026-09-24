@@ -11,8 +11,8 @@ authors:
   - given-names: Yibing
     family-names: Shi
     email: yibingshi2@gmail.com
-version: "0.1.0"
-date-released: "2026-09-19"
+version: "0.2.0"
+date-released: "2026-09-24"
 license: MIT
 keywords:
   - phonetics
