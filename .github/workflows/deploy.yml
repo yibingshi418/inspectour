@@ -43,16 +43,29 @@ jobs:
       - name: Deploy to shinyapps.io
         if: steps.creds.outputs.ok == 'true'
         run: |
-          rsconnect::setAccountInfo(name   = Sys.getenv("SHINYAPPS_ACCOUNT"),
-                                    token  = Sys.getenv("SHINYAPPS_TOKEN"),
-                                    secret = Sys.getenv("SHINYAPPS_SECRET"))
-          files <- c("app.R",
-                     list.files("R", full.names = TRUE),
-                     "data/sample_data.csv.gz",
-                     list.files("data/sample_audio", full.names = TRUE))
-          rsconnect::deployApp(appDir = ".", appFiles = files,
-                               appName = "inspectour",
-                               account = Sys.getenv("SHINYAPPS_ACCOUNT"),
-                               server = "shinyapps.io",
-                               forceUpdate = TRUE, launch.browser = FALSE)
+          log <- character(0)
+          res <- tryCatch({
+            rsconnect::setAccountInfo(name   = Sys.getenv("SHINYAPPS_ACCOUNT"),
+                                      token  = Sys.getenv("SHINYAPPS_TOKEN"),
+                                      secret = Sys.getenv("SHINYAPPS_SECRET"))
+            files <- c("app.R",
+                       list.files("R", full.names = TRUE),
+                       "data/sample_data.csv.gz",
+                       list.files("data/sample_audio", full.names = TRUE))
+            withCallingHandlers(
+              rsconnect::deployApp(appDir = ".", appFiles = files,
+                                   appName = "inspectour",
+                                   account = Sys.getenv("SHINYAPPS_ACCOUNT"),
+                                   server = "shinyapps.io",
+                                   forceUpdate = TRUE, launch.browser = FALSE),
+              message = function(m) log <<- c(log, conditionMessage(m)))
+            TRUE
+          }, error = function(e) {
+            # surfaced as an annotation so it shows on the run summary
+            msg <- gsub("[\r\n]+", " | ", conditionMessage(e))
+            tail_log <- gsub("[\r\n]+", " | ", paste(utils::tail(log, 12), collapse = " | "))
+            cat("::error title=Deploy failed::", msg, " || ", tail_log, "\n", sep = "")
+            FALSE
+          })
+          if (!isTRUE(res)) quit(status = 1)
         shell: Rscript {0}
